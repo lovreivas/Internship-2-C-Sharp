@@ -343,7 +343,7 @@
 
                 if (c == "1") AddTrip(users, trips);
                 else if (c == "2") DeleteTrip(users, trips);
-                else if (c == "3") ; //EditTrip(users, trips)
+                else if (c == "3") EditTrip(users, trips); 
                 else if (c == "4") ViewTrips(trips, users);
                 else if (c == "5") ;// ReportsMenu(users, trips)
                 else if (c == "0") break;
@@ -537,6 +537,105 @@
             }
 
             Console.WriteLine("Pritisni tipku...");
+            Console.ReadKey();
+        }
+        static void EditTrip(Dictionary<int, Tuple<string, string, DateTime, List<int>>> users, Dictionary<int, Tuple<int, DateTime, int, double, double, double>> trips)
+        {
+            Console.Clear();
+            Console.WriteLine("--- Uređivanje putovanja ---");
+            Console.WriteLine("0) Povratak");
+            Console.Write("Unesi ID putovanja: ");
+            var s = Console.ReadLine();
+            if (s == "0") return;
+
+            if (!int.TryParse(s, out int id) || !trips.ContainsKey(id))
+            {
+                Console.WriteLine("Ne postoji. Pritisni tipku...");
+                Console.ReadKey();
+                return;
+            }
+
+            var old = trips[id];
+
+            Console.Write("Novi datum (YYYY-MM-DD) (enter za zadržati): ");
+            var din = Console.ReadLine();
+            DateTime date = old.Item2;
+            if (!string.IsNullOrWhiteSpace(din))
+            {
+                if (!DateTime.TryParse(din, out date))
+                {
+                    Console.WriteLine("Neispravan datum.");
+                    Console.ReadKey();
+                    return;
+                }
+            }
+
+            Console.Write("Nova kilometraža (enter za zadržati): ");
+            var kin = Console.ReadLine();
+            int km = old.Item3;
+            if (!string.IsNullOrWhiteSpace(kin))
+            {
+                if (!int.TryParse(kin, out km) || km <= 0)
+                {
+                    Console.WriteLine("Neispravan broj.");
+                    Console.ReadKey();
+                    return;
+                }
+            }
+
+            Console.Write("Novo gorivo (L) (enter za zadržati): ");
+            var fin = Console.ReadLine();
+            double fuel = old.Item4;
+            if (!string.IsNullOrWhiteSpace(fin))
+            {
+                if (!double.TryParse(fin, out fuel) || fuel <= 0)
+                {
+                    Console.WriteLine("Neispravan broj.");
+                    Console.ReadKey();
+                    return;
+                }
+            }
+
+            Console.Write("Nova cijena po litri (enter za zadržati): ");
+            var pin = Console.ReadLine();
+            double price = old.Item5;
+            if (!string.IsNullOrWhiteSpace(pin))
+            {
+                if (!double.TryParse(pin, out price) || price <= 0)
+                {
+                    Console.WriteLine("Neispravan broj.");
+                    Console.ReadKey();
+                    return;
+                }
+            }
+
+            Console.Write("Promijeni korisnika (unesi novi ID ili enter za zadržati): ");
+            var uin = Console.ReadLine();
+            int newUserId = old.Item1;
+            bool userChanged = false;
+
+            if (!string.IsNullOrWhiteSpace(uin))
+            {
+                if (!int.TryParse(uin, out newUserId) || !users.ContainsKey(newUserId))
+                {
+                    Console.WriteLine("Neispravan korisnik.");
+                    Console.ReadKey();
+                    return;
+                }
+                if (newUserId != old.Item1) userChanged = true;
+            }
+
+            double total = Math.Round(fuel * price, 2);
+
+            trips[id] = new Tuple<int, DateTime, int, double, double, double>(newUserId, date, km, fuel, price, total);
+
+            if (userChanged)
+            {
+                users[old.Item1].Item4.Remove(id);
+                users[newUserId].Item4.Add(id);
+            }
+
+            Console.WriteLine("Putovanje ažurirano. Novi ukupni trošak: " + total + "e");
             Console.ReadKey();
         }
     }   
