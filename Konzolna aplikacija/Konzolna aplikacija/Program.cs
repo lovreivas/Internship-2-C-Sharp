@@ -288,17 +288,17 @@
                 var list = users.ToList();
                 list.Sort((x, y) => string.Compare(x.Value.Item2, y.Value.Item2, StringComparison.OrdinalIgnoreCase));
 
-                Console.WriteLine("ID | Prezime | Ime | Datum rođenja | Br. putovanja");
+                Console.WriteLine("ID - Prezime - Ime - Datum rođenja - Br. putovanja");
                 foreach (var u in list)
                 {
-                    Console.WriteLine("{0} | {1} | {2} | {3:d} | {4}", u.Key, u.Value.Item2, u.Value.Item1, u.Value.Item3, u.Value.Item4.Count);
+                    Console.WriteLine("{0} - {1} - {2} - {3:d} - {4}", u.Key, u.Value.Item2, u.Value.Item1, u.Value.Item3, u.Value.Item4.Count);
                 }
             }
             else if (opt == "b")
             {
                 var today = DateTime.Now;
 
-                Console.WriteLine("ID | Ime Prezime | Datum rođenja | Godine");
+                Console.WriteLine("ID - Ime Prezime - Datum rođenja - Godine");
                 foreach (var u in users)
                 {
                     int age = today.Year - u.Value.Item3.Year;
@@ -306,16 +306,16 @@
                         age--;
 
                     if (age > 20)
-                        Console.WriteLine("{0} | {1} {2} | {3:d} | {4}", u.Key, u.Value.Item1, u.Value.Item2, u.Value.Item3, age);
+                        Console.WriteLine("{0} - {1} - {2} - {3:d} - {4}", u.Key, u.Value.Item1, u.Value.Item2, u.Value.Item3, age);
                 }
             }
             else if (opt == "c")
             {
-                Console.WriteLine("ID | Ime Prezime | Broj putovanja");
+                Console.WriteLine("ID - Ime Prezime - Broj putovanja");
                 foreach (var u in users)
                 {
                     if (u.Value.Item4.Count >= 2)
-                        Console.WriteLine("{0} | {1} {2} | {3}", u.Key, u.Value.Item1, u.Value.Item2, u.Value.Item4.Count);
+                        Console.WriteLine("{0} - {1} - {2} - {3}", u.Key, u.Value.Item1, u.Value.Item2, u.Value.Item4.Count);
                 }
             }
             else
@@ -345,7 +345,7 @@
                 else if (c == "2") DeleteTrip(users, trips);
                 else if (c == "3") EditTrip(users, trips); 
                 else if (c == "4") ViewTrips(trips, users);
-                else if (c == "5") ;// ReportsMenu(users, trips)
+                else if (c == "5") ReportsMenu(users, trips);
                 else if (c == "0") break;
                 else
                 {
@@ -525,15 +525,15 @@
             else if (opt == "f") list.Sort((x, y) => x.Value.Item2.CompareTo(y.Value.Item2));
             else if (opt == "g") list.Sort((x, y) => y.Value.Item2.CompareTo(x.Value.Item2));
 
-            Console.WriteLine("ID | Korisnik | Datum | Km | Gorivo(L) | Cijena/L | Ukupno");
+            Console.WriteLine("#ID | Korisnik | Datum | Km | Gorivo(L) | Cijena/L | Ukupno");
             foreach (var t in list)
             {
                 string name = users.ContainsKey(t.Value.Item1)
                     ? users[t.Value.Item1].Item1 + " " + users[t.Value.Item1].Item2
                     : "Nepoznato";
 
-                Console.WriteLine("{0} | {1} | {2:d} | {3} | {4}L | {5}e | {6}e",
-                    t.Key, name, t.Value.Item2, t.Value.Item3, t.Value.Item4, t.Value.Item5, t.Value.Item6);
+                Console.WriteLine("#{0}\n{1}\n{2:d}\n{3}\n{4}L\n{5}e\n{6}e", t.Key, name, t.Value.Item2, t.Value.Item3, t.Value.Item4, t.Value.Item5, t.Value.Item6);
+                Console.WriteLine("------------------------------------------");
             }
 
             Console.WriteLine("Pritisni tipku...");
@@ -636,6 +636,108 @@
             }
 
             Console.WriteLine("Putovanje ažurirano. Novi ukupni trošak: " + total + "e");
+            Console.ReadKey();
+        }
+        static void ReportsMenu(Dictionary<int, Tuple<string, string, DateTime, List<int>>> users, Dictionary<int, Tuple<int, DateTime, int, double, double, double>> trips)
+        {
+            Console.Clear();
+            Console.WriteLine("--- Izvještaji i analize ---");
+            Console.WriteLine("0) Povratak");
+            Console.Write("Unesi ID korisnika: ");
+            var s = Console.ReadLine();
+            if (s == "0") return;
+
+            if (!int.TryParse(s, out int uid) || !users.ContainsKey(uid))
+            {
+                Console.WriteLine("Neispravan korisnik. Pritisni tipku...");
+                Console.ReadKey();
+                return;
+            }
+
+            Console.WriteLine("a) Ukupna potrošnja goriva (L)");
+            Console.WriteLine("b) Ukupni troškovi goriva (e)");
+            Console.WriteLine("c) Prosječna potrošnja L/100km");
+            Console.WriteLine("d) Putovanje s najvećom potrošnjom (L)");
+            Console.WriteLine("e) Pregled putovanja po datumu");
+            Console.WriteLine("0) Povratak");
+            Console.Write("Odabir: ");
+            var opt = Console.ReadLine();
+            if (opt == "0") return;
+
+            var userTripIds = users[uid].Item4;
+            var userTrips = new List<Tuple<int, DateTime, int, double, double, double>>();
+
+            foreach (var t in trips)
+            {
+                if (userTripIds.Contains(t.Key)) userTrips.Add(t.Value);
+            }
+
+            if (opt == "a")
+            {
+                double sumL = 0;
+                foreach (var t in userTrips) sumL += t.Item4;
+                Console.WriteLine("Ukupno goriva: " + sumL + " L");
+            }
+            else if (opt == "b")
+            {
+                double sumC = 0;
+                foreach (var t in userTrips) sumC += t.Item6;
+                Console.WriteLine("Ukupno troškova: " + sumC + " e");
+            }
+            else if (opt == "c")
+            {
+                double totalL = 0;
+                int totalKm = 0;
+                foreach (var t in userTrips)
+                {
+                    totalL += t.Item4;
+                    totalKm += t.Item3;
+                }
+                if (totalKm == 0) Console.WriteLine("Nema kilometara za izračun.");
+                else Console.WriteLine("Prosječno: " + Math.Round((totalL / totalKm) * 100, 2) + " L/100km");
+            }
+            else if (opt == "d")
+            {
+                if (userTrips.Count == 0) Console.WriteLine("Nema putovanja.");
+                else
+                {
+                    var max = userTrips[0];
+                    foreach (var t in userTrips) if (t.Item4 > max.Item4) max = t;
+                    Console.WriteLine("Najveća potrošnja: " + max.Item4 + " L (Datum: " + max.Item2.ToShortDateString() + ")");
+                }
+            }
+            else if (opt == "e")
+            {
+                Console.Write("Unesi datum (YYYY-MM-DD) (0 za povratak): ");
+                var sd = Console.ReadLine();
+                if (sd == "0") return;
+
+                if (!DateTime.TryParse(sd, out DateTime date))
+                {
+                    Console.WriteLine("Neispravan datum.");
+                    Console.ReadKey();
+                    return;
+                }
+
+                var found = new List<Tuple<int, DateTime, int, double, double, double>>();
+
+                foreach (var t in userTrips)
+                {
+                    if (t.Item2.Date == date.Date) found.Add(t);
+                }
+
+                if (found.Count == 0) Console.WriteLine("Nema putovanja za taj datum.");
+                else
+                {
+                    foreach (var t in found)
+                    {
+                        Console.WriteLine("Datum: " + t.Item2.ToShortDateString() + ", Km: " + t.Item3 + ", Gorivo: " + t.Item4 + "L, Ukupno: " + t.Item6 + "e");
+                    }
+                }
+            }
+            else Console.WriteLine("Pogrešan unos.");
+
+            Console.WriteLine("Pritisni tipku...");
             Console.ReadKey();
         }
     }   
